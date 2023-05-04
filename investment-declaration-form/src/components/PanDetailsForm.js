@@ -33,13 +33,13 @@ function PanDetailsForm() {
           <label htmlFor="employeeName" style={{ marginTop: "5px" }}>
             Name Of Employee (as in PAN Card) :
           </label>
-          <TextField id="employeeName" variant="standard"  value={name} onChange={(e)=>{setName(e.target.value)}} />
+          <TextField id="employeeName" variant="standard"  value={name} onChange={(e)=>{setName(e.target.value)}} required />
         </Stack>
         <Stack direction="row" spacing={1}>
           <label htmlFor="employeePan" style={{ marginTop: "5px" }}>
             PAN Number :
           </label>
-          <TextField id="employeePan" variant="standard" value={pan} onChange={(e)=>{setPan(e.target.value)}} />
+          <TextField id="employeePan" variant="standard" value={pan} onChange={(e)=>{setPan(e.target.value)}} required />
         </Stack>
         <FormControl>
           <RadioGroup
