@@ -42,6 +42,9 @@ function PanDetailsForm() {
     },
   });
 
+ const handleChangePan = (e) =>{
+  formik.setFieldValue('employeePan', (e.target.value).toUpperCase());
+ }
   return (
     <>
       {" "}
@@ -57,13 +60,15 @@ function PanDetailsForm() {
               value={formik.values.employeeName}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
+              helperText={
+                formik.submitCount>0 && formik.errors.employeeName && (
+                  <Typography variant="body1" color="red">
+                    {formik.errors.employeeName}
+                  </Typography>
+                )
+              }
             />
           </Stack>
-            {formik.submitCount>0 && formik.errors.employeeName && (
-              <Typography variant="body1" color="red">
-                {formik.errors.employeeName}
-              </Typography>
-            )}
           <Stack direction="row" spacing={1}>
             <label htmlFor="employeePan" style={{ marginTop: "5px" }}>
               PAN Number :
@@ -72,16 +77,18 @@ function PanDetailsForm() {
               id="employeePan"
               variant="standard"
               value={formik.values.employeePan}
-              onChange={formik.handleChange}
+              onChange={handleChangePan}
               onBlur={formik.handleBlur}
+              helperText={
+                formik.submitCount>0 && formik.errors.employeePan  && (
+                  <Typography variant="body1" color="red">
+                    {formik.errors.employeePan}
+                  </Typography>
+                )
+              }
             />
             
           </Stack>
-          {formik.submitCount>0 && formik.errors.employeePan  && (
-              <Typography variant="body1" color="red">
-                {formik.errors.employeePan}
-              </Typography>
-            )}
           <FormControl>
             <RadioGroup
               row

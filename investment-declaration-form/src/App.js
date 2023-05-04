@@ -13,3 +13,25 @@ function App() {
 }
 
 export default App;
+
+
+
+{/* <Rotes>
+  {
+    routes.map((ele) =>{
+      return(
+        <Route ele = {ele.element} path = {ele.path}  ></Route>
+      )
+    })
+  }
+</Rotes>
+
+
+let routes = [
+  {
+    name : 'xyz',
+    path : '/xyz',
+    element : '<xyz/>'
+    
+  }
+] */}
