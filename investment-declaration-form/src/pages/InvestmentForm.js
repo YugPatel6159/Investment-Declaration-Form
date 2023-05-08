@@ -9,13 +9,11 @@ function InvestmentForm() {
     <>
     <Box
       display="flex"
-      flexDirection={"column"}
+      flexDirection="column"
       justifyContent="center"
       alignItems="center"
-      margin="auto"
-      width="90%">
+      >
     <Header/>
-    <PanDetailsForm/>
     <Deduction/>
     </Box>
 

@@ -9,7 +9,16 @@ import { Stack, TextField, Button } from "@mui/material";
 import "./Deduction.css";
 import FinalAddition from "../Utils/FinalAddition";
 import Chips from "./Chips";
-import { SnippetFolderOutlined } from "@mui/icons-material";
+import { data } from "../Data/UserData";
+import HelpIcon from "@mui/icons-material/Help";
+import InfoModal from "./InfoModal";
+import { v4 as uuid } from "uuid";
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import Notes from "./Notes";
+import PanDetailsForm from "./PanDetailsForm";
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -49,219 +58,248 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 
 export default function Deduction() {
   const [expanded, setExpanded] = React.useState("");
-  const [categoryTotal, setCategoryTotal] = React.useState(0);
-  const [file, setFile] = React.useState([]);
+  const [infoBoolean, setInfoBoolean] = React.useState(false);
+  const [deduction, setDeduction] = React.useState({});
+  const [renderData, setRenderData] = React.useState(data);
+  const [place, setPlace] = React.useState('Ahmedabad');
+  const [submitData,setSubmitData] = React.useState([]);
 
-  const handleImageUpload = (event) => {
+  const handleEmployeePlace = (event) => {
+    setPlace(event.target.value);
+  };
+
+  const handleSubmit = () =>{
+    const submitedData = renderData.filter((item) => {
+      return item.totalAmount>0
+    })
+    const filteredObjects = submitedData.map(obj => ({
+      ...obj,
+      deduction: obj.deduction.filter(ded => ded.amount > 0)
+    })).filter(obj => obj.deduction.length > 0);
+    setSubmitData(filteredObjects)
+    console.log(filteredObjects,'filteredObjects')
+  }
+  
+  const empPlace = [
+    'Ahmedabad'
+  ]
+  const handleImageUpload = (event, cid, pid) => {
     const files = event.target.files;
-    setFile([...file, ...files]);
-    console.log(files)
+    [...files].map((res) => {
+      res.id = uuid();
+    });
+    let newData = renderData.map((item) => {
+      if (item.id === pid) {
+        let subData = item.deduction.map((deduction) => {
+          if (deduction.id === cid) {
+            return {
+              ...deduction,
+              uploadFile: [...deduction.uploadFile, ...files],
+            };
+          } else {
+            return deduction;
+          }
+        });
+        return {
+          ...item,
+          deduction: subData,
+        };
+      } else {
+        return item;
+      }
+    });
+    setRenderData(newData);
+  };
+  const handleSubTotal = (e, pid, cid) => {
+    let subAmount = Number(e.target.value);
+    let subTotal = 0;
+
+    let newData = renderData.map((item) => {
+      if (item.id === pid) {
+        let subData = item.deduction.map((deduction) => {
+          if (deduction.id === cid) {
+            subTotal = subTotal + subAmount;
+            return {
+              ...deduction,
+              amount: subAmount,
+            };
+          } else {
+            subTotal = subTotal + deduction.amount;
+            return deduction;
+          }
+        });
+        return {
+          ...item,
+          deduction: subData,
+          totalAmount: subTotal,
+        };
+      } else {
+        return item;
+      }
+    });
+    setRenderData(newData);
   };
 
-  const handleChangeFileValue = (newValue) => {
-    setFile(newValue);
+  const handleFileDelete = (fileId, childId, parentId) => {
+    console.log("functionCalled");
+    let newData = renderData?.map((item) => {
+      if (item.id == parentId) {
+        let subData = item?.deduction?.map((deduction) => {
+          if (deduction.id === childId) {
+            let newValue = deduction.uploadFile.filter(
+              (file) => file.id !== fileId
+            );
+            return {
+              ...deduction,
+              uploadFile: [...newValue],
+            };
+          } else {
+            return deduction;
+          }
+        });
+        return {
+          ...item,
+          deduction: subData,
+        };
+      } else {
+        return item;
+      }
+    });
+    setRenderData(newData);
   };
-
   const handleChange = (panel) => (event, newExpanded) => {
     setExpanded(newExpanded ? panel : false);
   };
-  console.log(file);
   return (
     <div className="deduction">
-      
-      
-      <Accordion
-        expanded={expanded === "panel1"}
-        onChange={handleChange("panel1")}
-      >
-        <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-          <Stack direction="row" spacing={2}>
-            <Typography>Deduction under section 80C</Typography>
-            <Typography align="left">
-              <FinalAddition value={categoryTotal} />
-            </Typography>
+      <PanDetailsForm/>
+      {renderData?.map((item, index) => (
+        <Accordion
+          key={index}
+          expanded={expanded === `"panel${index}"`}
+          onChange={handleChange(`"panel${index}"`)}
+        >
+          <AccordionSummary
+            aria-controls={`"panel${index}d-content"`}
+            id={`"panel${index}d-header"`}
+          >
+            <Stack direction="row" key={index} className="rule-item">
+              <Typography>{item.ruleName}</Typography>
+              <Typography>₹ {item.totalAmount}</Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            {item.deduction.map((deduction, dindex) => (
+              <>
+                <Typography sx={{ marginTop: "10px" }}>
+                  {deduction.name}
+                  {item.deduction[dindex].description.length > 1 && (
+                    <HelpIcon
+                      key={dindex}
+                      onClick={() => {
+                        console.log("clicked");
+                        setDeduction({
+                          id: dindex,
+                          name: deduction.name,
+                          description: deduction.description,
+                        });
+                        setInfoBoolean(true);
+                      }}
+                    />
+                  )}
+                </Typography>
+                <Stack direction="row" key={dindex} spacing={2}>
+                  <input
+                    id={deduction.id}
+                    placeholder="0"
+                    type="number"
+                    className="inputField"
+                    onChange={(e) => {
+                      handleSubTotal(e, item.id, deduction.id);
+                    }}
+                    sx={{ width: "100%" }}
+                  />
+                  <div>
+                    <TextField
+                      type="file"
+                      name={deduction.id}
+                      id={"file" + deduction.id}
+                      inputProps={{
+                        multiple: true,
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                      onChange={(event) => {
+                        handleImageUpload(event, deduction.id, item.id);
+                      }}
+                      style={{ display: "none" }}
+                    />
+                    <label htmlFor={"file" + deduction.id}>
+                      <Button
+                        variant="contained"
+                        component="span"
+                        sx={{ backgroundColor: "orange", color: "white" }}
+                      >
+                        Upload
+                      </Button>
+                    </label>
+                  </div>
+                </Stack>
+                <Chips
+                  files={deduction.uploadFile}
+                  childId={deduction.id}
+                  parentId={item.id}
+                  handleFileDelete={handleFileDelete}
+                />
+              </>
+            ))}
+          </AccordionDetails>
+        </Accordion>
+      ))}
+      <Typography sx={{ marginTop: "10px" }} variant="h6">
+        Total Amount : ₹ {renderData?.reduce((a, b) => a + b.totalAmount, 0)}
+      </Typography>
+      <Stack className="totalAmount">
+        <Stack direction="row" spacing={1}>
+          <label htmlFor="date">Date:</label>
+          <TextField id="date" type="date" variant="standard" />
+        </Stack>
+        <Stack direction="row" spacing={1}>
+          <label htmlFor="employeePlace">Employee Place:</label>
+          <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+        <Select
+          labelId="demo-simple-select-standard-label"
+          id="demo-simple-select-standard"
+          value={place}
+          onChange={handleEmployeePlace}
+          label="place"
+        >
+          <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
+        </Select>
+      </FormControl>
+        </Stack>
+        <Stack direction="row" className="submitBtn" >
+        <Stack direction="row" spacing={1}>
+          <label htmlFor="sign">Employee Signature:</label>
+          <TextField id="sign" type="text" variant="standard" />
+        </Stack>
+        <Button
+          variant="contained"
+          sx={{ color: "black", backgroundColor: "orange" }}
+          onClick={handleSubmit}
+          >
+          Submit
+        </Button>
           </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              id="deposit-in-ulip"
-              label="Deposit in ULIP"
-              placeholder="0"
-              type="text"
-              onChange={(e) => {
-                if (e.target.value.length > 0) {
-                  setCategoryTotal(e.target.value);
-                } else {
-                  setCategoryTotal(0);
-                }
-              }}
-              sx={{ width: "100%" }}
-            />
-            <TextField
-              type="file"
-              name="file"
-              id="file"
-              inputProps={{
-                multiple: true,
-              }}
-              InputLabelProps={{ shrink: true }}
-              onChange={(event) => handleImageUpload(event)}
-              style={{ display: "none" }}
-            />
-            <label htmlFor="file">
-              <Button variant="contained" className="buttonColor" component="span">
-                Upload
-              </Button>
-            </label>
-          </Stack>
-          <Chips files={file} onChangeFilesValue={handleChangeFileValue}/>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion
-        expanded={expanded === "panel2"}
-        onChange={handleChange("panel2")}
-      >
-        <AccordionSummary aria-controls="panel2d-content" id="panel2d-header">
-          <Stack direction="row" spacing={2}>
-            <Typography>Deduction under section 80C</Typography>
-            <Typography align="left">
-              <FinalAddition value={categoryTotal} />
-            </Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              id="deposit-in-ulip"
-              label="Deposit in ULIP"
-              placeholder="0"
-              type="text"
-              onChange={(e) => {
-                if (e.target.value.length > 0) {
-                  setCategoryTotal(e.target.value);
-                } else {
-                  setCategoryTotal(0);
-                }
-              }}
-              sx={{ width: "100%" }}
-            />
-            <TextField
-              type="file"
-              name="file"
-              id="file1"
-              inputProps={{
-                multiple: true,
-              }}
-              InputLabelProps={{ shrink: true }}
-              onChange={(event) => handleImageUpload(event)}
-              style={{ display: "none" }}
-            />
-            <label htmlFor="file1">
-              <Button variant="contained" className="buttonColor" component="span">
-                Upload
-              </Button>
-            </label>
-          </Stack>
-          <Chips files={file} onChangeFilesValue={handleChangeFileValue}/>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion
-        expanded={expanded === "panel3"}
-        onChange={handleChange("panel3")}
-      >
-        <AccordionSummary aria-controls="panel3d-content" id="panel3d-header">
-          <Stack direction="row" spacing={2}>
-            <Typography>Deduction under section 80C</Typography>
-            <Typography align="left">
-              <FinalAddition value={categoryTotal} />
-            </Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              id="deposit-in-ulip"
-              label="Deposit in ULIP"
-              placeholder="0"
-              type="text"
-              onChange={(e) => {
-                if (e.target.value.length > 0) {
-                  setCategoryTotal(e.target.value);
-                } else {
-                  setCategoryTotal(0);
-                }
-              }}
-              sx={{ width: "100%" }}
-            />
-            <TextField
-              type="file"
-              name="file"
-              id="file2"
-              inputProps={{
-                multiple: true,
-              }}
-              InputLabelProps={{ shrink: true }}
-              onChange={(event) => handleImageUpload(event)}
-              style={{ display: "none" }}
-            />
-            <label htmlFor="file2">
-              <Button variant="contained" className="buttonColor" component="span">
-                Upload
-              </Button>
-            </label>
-          </Stack>
-          <Chips files={file} onChangeFilesValue={handleChangeFileValue}/>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion
-        expanded={expanded === "panel4"}
-        onChange={handleChange("panel4")}
-      >
-        <AccordionSummary aria-controls="panel3d-content" id="panel3d-header">
-          <Stack direction="row" spacing={2}>
-            <Typography>Deduction under section 80C</Typography>
-            <Typography align="left">
-              <FinalAddition value={categoryTotal} />
-            </Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              id="deposit-in-ulip"
-              label="Deposit in ULIP"
-              placeholder="0"
-              type="text"
-              onChange={(e) => {
-                if (e.target.value.length > 0) {
-                  setCategoryTotal(e.target.value);
-                } else {
-                  setCategoryTotal(0);
-                }
-              }}
-              sx={{ width: "100%" }}
-            />
-            <TextField
-              type="file"
-              name="file"
-              id="file3"
-              inputProps={{
-                multiple: true,
-              }}
-              InputLabelProps={{ shrink: true }}
-              onChange={(event) => handleImageUpload(event)}
-              style={{ display: "none" }}
-            />
-            <label htmlFor="file3">
-              <Button variant="contained" className="buttonColor" component="span">
-                Upload
-              </Button>
-            </label>
-          </Stack>
-          <Chips files={file} onChangeFilesValue={handleChangeFileValue}/>
-        </AccordionDetails>
-      </Accordion>
+        </Stack>
+        <Notes/>
+      {infoBoolean && (
+        <InfoModal
+          open={infoBoolean}
+          onClose={() => setInfoBoolean(false)}
+          title={deduction.name}
+          description={deduction.description}
+        />
+      )}
     </div>
   );
 }

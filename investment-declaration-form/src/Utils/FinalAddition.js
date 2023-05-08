@@ -1,7 +1,7 @@
 import React from 'react'
 
 function FinalAddition({value}) {
-    console.log(value)
+    console.log(value,'value')
   return (
     <>
     {value}

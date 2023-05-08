@@ -46,7 +46,7 @@ function PanDetailsForm() {
   formik.setFieldValue('employeePan', (e.target.value).toUpperCase());
  }
   return (
-    <>
+    <Stack sx={{display:'flex',justifyContent:'center'}}>
       {" "}
       <form onSubmit={formik.handleSubmit}>
         <Stack sx={{ marginTop: "30px " }}>
@@ -142,7 +142,7 @@ function PanDetailsForm() {
             )}
           </FormControl>
         </Stack>
-        <Button type="submit" variant="contained">
+        <Button type="submit" sx={{backgroundColor: "orange",color: "white", marginBottom: "20px"}}>
           Submit
         </Button>
       </form>
@@ -166,7 +166,7 @@ function PanDetailsForm() {
           optionValue={optionValue}
         />
       )}
-    </>
+    </Stack>
   );
 }
 

@@ -2,22 +2,22 @@ import * as React from "react";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 
-export default function Chips({ files, onChangeFilesValue }) {
-    const handleDelete = (name) => {
-        onChangeFilesValue(files.filter((file) => file.name !== name));
-        console.info("You clicked the delete icon.");
-    }
+export default function Chips({ files, handleFileDelete, childId, parentId }) {
+    // const handleDelete = (files) => {
+    //   console.log(files,' files')
+    //   handleFileDelete([...files], childId, parentId);
+    // }
   
   return (
-    <Stack direction="row" spacing={1}>
-      {files.map((res, index) => (
+      files.map((res,index) => (
+    <Stack direction="row" spacing={1} key={index}>
         <Chip
-          key={index}
+          key={res.id}
           label={res.name}
           variant="outlined"
-          onDelete={()=>handleDelete(res.name)}
+          onDelete={()=>handleFileDelete(res.id,childId,parentId)}
         />
-      ))}
     </Stack>
+      ))
   );
 }
