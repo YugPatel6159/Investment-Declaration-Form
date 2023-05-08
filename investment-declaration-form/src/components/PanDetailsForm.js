@@ -11,7 +11,7 @@ import SubmitModal from "./SubmitModal";
 import { Formik, useFormik } from "formik";
 import { DeclarationFormSchema } from "../Validations/DeclarationFormSchema";
 
-function PanDetailsForm() {
+function PanDetailsForm(props) {
   const [openModal, setOpenModal] = useState(false);
   const [option, setOption] = useState("");
   const [name, setName] = useState("");
@@ -29,6 +29,8 @@ function PanDetailsForm() {
     option: "",
   };
 
+
+
   const formik = useFormik({
     initialValues: initialValues,
     validationSchema: DeclarationFormSchema,
@@ -41,7 +43,8 @@ function PanDetailsForm() {
       actions.resetForm();
     },
   });
-
+  
+  props.handlePanDetails(formik.values);
  const handleChangePan = (e) =>{
   formik.setFieldValue('employeePan', (e.target.value).toUpperCase());
  }
@@ -61,7 +64,7 @@ function PanDetailsForm() {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               helperText={
-                formik.submitCount>0 && formik.errors.employeeName && (
+                formik.touched.employeeName && formik.errors.employeeName && (
                   <Typography variant="body1" color="red">
                     {formik.errors.employeeName}
                   </Typography>
@@ -80,7 +83,7 @@ function PanDetailsForm() {
               onChange={handleChangePan}
               onBlur={formik.handleBlur}
               helperText={
-                formik.submitCount>0 && formik.errors.employeePan  && (
+                formik.touched.employeePan && formik.errors.employeePan  && (
                   <Typography variant="body1" color="red">
                     {formik.errors.employeePan}
                   </Typography>

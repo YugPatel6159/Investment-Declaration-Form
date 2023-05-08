@@ -19,6 +19,8 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import Notes from "./Notes";
 import PanDetailsForm from "./PanDetailsForm";
+import FinalSubmitModal from "./FinalSubmitModal";
+import { Formik, useFormik } from "formik";
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -63,26 +65,39 @@ export default function Deduction() {
   const [renderData, setRenderData] = React.useState(data);
   const [place, setPlace] = React.useState('Ahmedabad');
   const [submitData,setSubmitData] = React.useState([]);
+  const [submitModal,setSubmitModal] = React.useState(false);
+  const [panDetails,setPanDetails]=React.useState({});
+
+  const initialValues = {
+    date:'',
+    city:'ahmedabad',
+    sign:''
+  }
+
+  const formik = useFormik({
+    initialValues: initialValues,
+    onSubmit: (values) => {
+      const submitedData = renderData.filter((item) => {
+        return item.totalAmount>0
+      })
+      const filteredObjects = submitedData.map(obj => ({
+        ...obj,
+        deduction: obj.deduction.filter(ded => ded.amount > 0)
+      })).filter(obj => obj.deduction.length > 0);
+      setSubmitModal(true);
+      const submitDatas = {
+        filterdData : [...filteredObjects],
+        panData:{...panDetails},
+        finalData:{...values}
+      }
+      setSubmitData(submitDatas)
+    }
+  })
 
   const handleEmployeePlace = (event) => {
     setPlace(event.target.value);
   };
 
-  const handleSubmit = () =>{
-    const submitedData = renderData.filter((item) => {
-      return item.totalAmount>0
-    })
-    const filteredObjects = submitedData.map(obj => ({
-      ...obj,
-      deduction: obj.deduction.filter(ded => ded.amount > 0)
-    })).filter(obj => obj.deduction.length > 0);
-    setSubmitData(filteredObjects)
-    console.log(filteredObjects,'filteredObjects')
-  }
-  
-  const empPlace = [
-    'Ahmedabad'
-  ]
   const handleImageUpload = (event, cid, pid) => {
     const files = event.target.files;
     [...files].map((res) => {
@@ -113,7 +128,6 @@ export default function Deduction() {
   const handleSubTotal = (e, pid, cid) => {
     let subAmount = Number(e.target.value);
     let subTotal = 0;
-
     let newData = renderData.map((item) => {
       if (item.id === pid) {
         let subData = item.deduction.map((deduction) => {
@@ -170,9 +184,13 @@ export default function Deduction() {
   const handleChange = (panel) => (event, newExpanded) => {
     setExpanded(newExpanded ? panel : false);
   };
+
+  const handlePanDetails = (data) => {
+    setPanDetails(data)
+  }
   return (
     <div className="deduction">
-      <PanDetailsForm/>
+      <PanDetailsForm handlePanDetails={handlePanDetails}/>
       {renderData?.map((item, index) => (
         <Accordion
           key={index}
@@ -190,7 +208,7 @@ export default function Deduction() {
           </AccordionSummary>
           <AccordionDetails>
             {item.deduction.map((deduction, dindex) => (
-              <>
+              <Stack key={dindex}>
                 <Typography sx={{ marginTop: "10px" }}>
                   {deduction.name}
                   {item.deduction[dindex].description.length > 1 && (
@@ -250,7 +268,7 @@ export default function Deduction() {
                   parentId={item.id}
                   handleFileDelete={handleFileDelete}
                 />
-              </>
+              </Stack>
             ))}
           </AccordionDetails>
         </Accordion>
@@ -261,16 +279,15 @@ export default function Deduction() {
       <Stack className="totalAmount">
         <Stack direction="row" spacing={1}>
           <label htmlFor="date">Date:</label>
-          <TextField id="date" type="date" variant="standard" />
+          <TextField onBlur={formik.handleBlur} onChange={formik.handleChange} id="date" type="date" variant="standard"  />
         </Stack>
         <Stack direction="row" spacing={1}>
           <label htmlFor="employeePlace">Employee Place:</label>
           <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
         <Select
-          labelId="demo-simple-select-standard-label"
           id="demo-simple-select-standard"
           value={place}
-          onChange={handleEmployeePlace}
+          onChange={(event)=>formik.setFieldValue('place', event.target.value)}
           label="place"
         >
           <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
@@ -280,12 +297,13 @@ export default function Deduction() {
         <Stack direction="row" className="submitBtn" >
         <Stack direction="row" spacing={1}>
           <label htmlFor="sign">Employee Signature:</label>
-          <TextField id="sign" type="text" variant="standard" />
+          <TextField id="sign" onBlur={formik.handleBlur} onChange={formik.handleChange} type="text" variant="standard" />
         </Stack>
         <Button
           variant="contained"
+          type="submit"
           sx={{ color: "black", backgroundColor: "orange" }}
-          onClick={handleSubmit}
+          onClick={formik.handleSubmit}
           >
           Submit
         </Button>
@@ -299,7 +317,14 @@ export default function Deduction() {
           title={deduction.name}
           description={deduction.description}
         />
+        
       )}
+      <FinalSubmitModal
+      open={submitModal}
+      onClose={() => 
+        setSubmitModal(false)}
+      data={submitData}
+      />
     </div>
   );
 }
